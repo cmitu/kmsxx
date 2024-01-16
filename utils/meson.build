@@ -20,6 +20,7 @@ executable('kmsprint', 'kmsprint.cpp', dependencies : [ common_deps ], install :
 executable('fbtest', 'fbtest.cpp', dependencies : [ common_deps ], install : true)
 executable('kmscapture', 'kmscapture.cpp', dependencies : [ common_deps ], install : false)
 executable('kmsblank', 'kmsblank.cpp', dependencies : [ common_deps ], install : true)
+executable('kmsprint-rp', 'kmsprint_2.cpp', dependencies: [ common_deps ], install: true)
 
 if libevdev_dep.found()
     executable('kmstouch', 'kmstouch.cpp', dependencies : [ common_deps, libevdev_dep ], install : false)

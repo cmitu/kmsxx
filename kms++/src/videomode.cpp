@@ -269,4 +269,87 @@ Videomode videomode_from_timings(uint32_t clock_khz,
 	return m;
 }
 
+// Custom format functions
+
+// Format the mode flags
+static string mode_flag_str_rp(unsigned val)
+{
+	const map<int, string> local_mode_flag_map = {
+		{ DRM_MODE_FLAG_PHSYNC, "hsync+" },
+		{ DRM_MODE_FLAG_NHSYNC, "hsync-" },
+		{ DRM_MODE_FLAG_PVSYNC, "vsync+" },
+		{ DRM_MODE_FLAG_NVSYNC, "vsync-" },
+		{ DRM_MODE_FLAG_INTERLACE, "interlace" },
+		{ DRM_MODE_FLAG_DBLSCAN, "dblscan" },
+		{ DRM_MODE_FLAG_CSYNC, "csync" },
+		{ DRM_MODE_FLAG_PCSYNC, "pcsync" },
+		{ DRM_MODE_FLAG_NCSYNC, "ncsync" },
+		{ DRM_MODE_FLAG_HSKEW, "hskew" },
+		{ DRM_MODE_FLAG_DBLCLK, "dblclock" },
+		{ DRM_MODE_FLAG_CLKDIV2, "clkdiv2" },
+	};
+	vector<string> s;
+	for (const auto& [k, v] : local_mode_flag_map) {
+		if (val & k) {
+			if (!v.empty())
+				s.push_back(v);
+			val &= ~k;
+		}
+	}
+	if (s.size() == 0)
+		return "";
+	else
+		return " " + join(s, ", ") + ",";
+}
+
+// Format the mode type
+static string mode_type_str_rp(unsigned val)
+{
+	static const map<int, string> local_mode_type_map = {
+		// the deprecated ones don't care about a short name
+		{ DRM_MODE_TYPE_BUILTIN, "builtin" }, // deprecated
+		{ DRM_MODE_TYPE_CLOCK_C, "clock_c" }, // deprecated
+		{ DRM_MODE_TYPE_CRTC_C, "crtc_c" }, // deprecated
+		{ DRM_MODE_TYPE_PREFERRED, "preferred" },
+		{ DRM_MODE_TYPE_DEFAULT, "default" }, // deprecated
+		{ DRM_MODE_TYPE_USERDEF, "userdef" },
+		{ DRM_MODE_TYPE_DRIVER, "driver" },
+	};
+	vector<string> s;
+	for (const auto& [k, v] : local_mode_type_map) {
+		if (val & k) {
+			if (!v.empty())
+				s.push_back(v);
+			val &= ~k;
+		}
+	}
+	return join(s, ", ");
+}
+
+// Format the video mode itself
+string Videomode::to_string_rp_custom() const
+{
+	auto it = mode_aspect_map.find(flags & DRM_MODE_FLAG_PIC_AR_MASK);
+	string aspect_ratio = "n/a";
+	if (it != mode_aspect_map.end()) {
+		if (!it->second.empty())
+			aspect_ratio = it->second;
+	}
+
+	// Mode name (WxH[i]@vRefresh (vRefreshCal))
+	string res = fmt::format("{:>9} @ {}Hz ({:.2f})",
+				 fmt::format("{}x{}{}", hdisplay, vdisplay, interlace() ? "i" : ""),
+				 vrefresh,
+				 calculated_vrefresh());
+	// Add clock frequency and flags/type info
+	string str = fmt::format("{} {:^5} ({:.2f} Mhz,{} {})",
+				 res,
+				 aspect_ratio,
+				 clock / 1000.0,
+				 mode_flag_str_rp(flags),
+				 mode_type_str_rp(type));
+
+	return str;
+}
+
 } // namespace kms

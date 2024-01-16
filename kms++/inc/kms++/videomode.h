@@ -50,6 +50,9 @@ struct Videomode {
 	std::string to_string_long() const;
 	std::string to_string_long_padded() const;
 
+	// Custom mode format function for RetroPie
+	std::string to_string_rp_custom() const;
+
 	bool valid() const;
 };
 
