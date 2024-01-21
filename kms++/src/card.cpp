@@ -216,6 +216,14 @@ void Card::setup()
 	m_has_atomic = false;
 #endif
 
+	// Aspect Ratio info should be included in the viddeo mode flags,
+     // unless disabled at runtime
+	if (getenv("KMSXX_DISABLE_AR_FLAGS") == 0) {
+		drmSetClientCap(m_fd, DRM_CLIENT_CAP_ASPECT_RATIO, 1);
+	} else {
+		drmSetClientCap(m_fd, DRM_CLIENT_CAP_ASPECT_RATIO, 0);
+	}
+
 	uint64_t has_dumb;
 	r = drmGetCap(m_fd, DRM_CAP_DUMB_BUFFER, &has_dumb);
 	m_has_dumb = r == 0 && has_dumb;
